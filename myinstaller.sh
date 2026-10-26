@@ -11,6 +11,8 @@ VERSION="1.0.1"
 USERNAME="popking159"
 REPO="MyStreamer"
 
+PLUGIN_PATH="/usr/lib/enigma2/python/Plugins/Extensions/MyStreamer"
+
 # Terminal Colors
 RED='\033[0;31m'
 GREEN='\033[0;32m'
@@ -58,7 +60,37 @@ else
 fi
 log "[INFO] Package manager detected: ${PKG_MANAGER}"
 
-# 2. Detect Python Version (Formatted with decimal, e.g., 3.13)
+# 2. Check and Remove Previous Version
+log "[INFO] Checking for previous installations..."
+OLD_INSTALLED=0
+
+if [ "$PKG_MANAGER" = "opkg" ]; then
+    if opkg status "$PKG_BASE" 2>/dev/null | grep -q "^Status:.*installed"; then
+        log "[WARN]    -> Old package version detected. Uninstalling via opkg..."
+        opkg remove "$PKG_BASE" --force-depends >/dev/null 2>&1
+        OLD_INSTALLED=1
+    fi
+elif [ "$PKG_MANAGER" = "apt" ]; then
+    if dpkg-query -W -f='${Status}' "$PKG_BASE" 2>/dev/null | grep -q "install ok installed"; then
+        log "[WARN]    -> Old package version detected. Uninstalling via apt..."
+        apt-get remove -y "$PKG_BASE" >/dev/null 2>&1
+        OLD_INSTALLED=1
+    fi
+fi
+
+if [ -d "$PLUGIN_PATH" ]; then
+    log "[WARN]    -> Old plugin directory detected. Removing..."
+    rm -rf "$PLUGIN_PATH"
+    OLD_INSTALLED=1
+fi
+
+if [ $OLD_INSTALLED -eq 1 ]; then
+    log "[OK]    -> Uninstallation of previous version complete."
+else
+    log "[INFO]    -> No previous version found."
+fi
+
+# 3. Detect Python Version (Formatted with decimal, e.g., 3.13)
 if has_cmd python3; then
     PYTHON_VERSION="3"
     PY_VER=$(python3 -c 'import sys; print("%d.%d" % (sys.version_info.major, sys.version_info.minor))' 2>/dev/null)
@@ -78,7 +110,7 @@ fi
 
 log "[INFO] Detected Python Version: Python $PY_VER"
 
-# 3. Detect STB Architecture
+# 4. Detect STB Architecture
 if [ -f /usr/lib/enigma.info ]; then
     INFO_ARCH=$(grep "^architecture=" /usr/lib/enigma.info | cut -d"=" -f2 | tr -d "'\"")
     case "$INFO_ARCH" in
@@ -136,14 +168,14 @@ case "$PY_VER" in
         ;;
 esac
 
-# 4. Construct IPK File Name and Download URL
+# 5. Construct IPK File Name and Download URL
 IPK_NAME="${PKG_BASE}_${VERSION}_${ARCH}_py${PY_VER}.ipk"
 PLUGIN_URL="https://github.com/${USERNAME}/${REPO}/raw/refs/heads/main/${IPK_NAME}"
 TMP_FILE="$TMP_DIR/$IPK_NAME"
 
 log "[INFO] Target Package: $IPK_NAME"
 
-# 5. Download IPK Archive safely (Catch GitHub 404 HTML pages)
+# 6. Download IPK Archive safely (Catch GitHub 404 HTML pages)
 log "[INFO] Downloading IPK package..."
 rm -f "$TMP_FILE"
 
@@ -160,7 +192,7 @@ if [ ! -s "$TMP_FILE" ] || grep -q -i "<html" "$TMP_FILE" || grep -q "404: Not F
     exit 1
 fi
 
-# 6. Install the IPK
+# 7. Install the IPK
 log "[INFO] Installing package..."
 if [ "$PKG_MANAGER" = "opkg" ]; then
     opkg install --force-reinstall --force-overwrite "$TMP_FILE"
@@ -175,7 +207,7 @@ if [ $? -ne 0 ]; then
     exit 1
 fi
 
-# 7. Cleanup and Finalize
+# 8. Cleanup and Finalize
 rm -f "$TMP_FILE"
 sync
 
