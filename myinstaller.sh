@@ -168,14 +168,14 @@ case "$PY_VER" in
         ;;
 esac
 
-# 5. Construct IPK File Name and Download URL
+# 5. Construct IPK File Name and GitLab Download URL
 IPK_NAME="${PKG_BASE}_${VERSION}_${ARCH}_py${PY_VER}.ipk"
-PLUGIN_URL="https://github.com/${USERNAME}/${REPO}/raw/refs/heads/main/${IPK_NAME}"
+PLUGIN_URL="https://gitlab.com/${USERNAME}/${REPO}/-/raw/main/${IPK_NAME}"
 TMP_FILE="$TMP_DIR/$IPK_NAME"
 
 log "[INFO] Target Package: $IPK_NAME"
 
-# 6. Download IPK Archive safely (Catch GitHub 404 HTML pages)
+# 6. Download IPK Archive safely (Catch GitLab 404 HTML pages)
 log "[INFO] Downloading IPK package..."
 rm -f "$TMP_FILE"
 
@@ -185,8 +185,8 @@ elif has_cmd curl; then
     curl -s -k -L "$PLUGIN_URL" -o "$TMP_FILE"
 fi
 
-if [ ! -s "$TMP_FILE" ] || grep -q -i "<html" "$TMP_FILE" || grep -q "404: Not Found" "$TMP_FILE"; then
-    log "[ERROR] Download failed! The compiled package for $ARCH and Python $PY_VER does not exist on GitHub."
+if [ ! -s "$TMP_FILE" ] || grep -q -i "<html" "$TMP_FILE" || grep -q "404 Not Found" "$TMP_FILE"; then
+    log "[ERROR] Download failed! The compiled package for $ARCH and Python $PY_VER does not exist on GitLab."
     log "[ERROR] URL Checked: $PLUGIN_URL"
     rm -f "$TMP_FILE"
     exit 1
