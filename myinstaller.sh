@@ -7,7 +7,7 @@
 
 PLUGIN_NAME="MyStreamer"
 PKG_BASE="enigma2-plugin-extensions-mystreamer"
-VERSION="1.0.0"
+VERSION="1.0.1"
 USERNAME="popking159"
 REPO="MyStreamer"
 
@@ -82,7 +82,7 @@ log "[INFO] Detected Python Version: Python $PY_VER"
 if [ -f /usr/lib/enigma.info ]; then
     INFO_ARCH=$(grep "^architecture=" /usr/lib/enigma.info | cut -d"=" -f2 | tr -d "'\"")
     case "$INFO_ARCH" in
-        cortexa15hf-neon-vfpv4|armv7ahf-neon|aarch64)
+        cortexa15hf-neon-vfpv4|armv7ahf-neon|aarch64|mips32el)
             ARCH="$INFO_ARCH"
             ;;
     esac
@@ -95,6 +95,8 @@ if [ -z "$ARCH" ] && [ -f /etc/opkg/arch.conf ]; then
         ARCH="armv7ahf-neon"
     elif grep -q "aarch64" /etc/opkg/arch.conf; then
         ARCH="aarch64"
+    elif grep -q "mips32el" /etc/opkg/arch.conf; then
+        ARCH="mips32el"
     fi
 fi
 
@@ -107,6 +109,9 @@ if [ -z "$ARCH" ]; then
         armv7l|arm*)
             ARCH="cortexa15hf-neon-vfpv4"
             ;;
+        mips*|mipsel)
+            ARCH="mips32el"
+            ;;
     esac
 fi
 
@@ -114,7 +119,7 @@ log "[INFO] Detected Architecture: ${ARCH:-Unknown}"
 
 # Verify supported arch and python
 case "$ARCH" in
-    cortexa15hf-neon-vfpv4|armv7ahf-neon|aarch64)
+    cortexa15hf-neon-vfpv4|armv7ahf-neon|aarch64|mips32el)
         ;;
     *)
         log "[ERROR] Unsupported STB architecture: '$ARCH'. Aborting installation."
