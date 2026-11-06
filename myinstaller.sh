@@ -7,7 +7,7 @@
 
 PLUGIN_NAME="MyStreamer"
 PKG_BASE="enigma2-plugin-extensions-mystreamer"
-VERSION="1.0.3"
+VERSION="1.0.4"
 USERNAME="popking159"
 REPO="MyStreamer"
 
